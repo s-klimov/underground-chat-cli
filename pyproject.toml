@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "underground-chat-cli"
+version = "0.1.0"
+description = "Подключаемся к подпольному чату"
+authors = ["Sergei Kilmov <s.klimov@bk.ru>"]
+readme = "README.md"
+packages = [{include = "underground_chat_cli"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+asyncio = "^3.4.3"
+aiohttp = "^3.8.4"
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "^6.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
