@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "Подключаемся к подпольному чату"
 authors = ["Sergei Kilmov <s.klimov@bk.ru>"]
 readme = "README.md"
-packages = [{include = "underground_chat_cli"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
