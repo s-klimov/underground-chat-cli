@@ -13,9 +13,17 @@ MINECHAT_HOST = 'minechat.dvmn.org'
 MINECHAT_PORT = 5000
 HISTORY_FILE = 'chat.txt'
 
+def fatal_code(e) -> None:
+    logger.info("Прерываем работу сервера")  # логируем полученное сообщение
+    raise
+
 
 @backoff.on_exception(backoff.expo,
-                      (OSError, asyncio.exceptions.CancelledError, asyncio.exceptions.TimeoutError))
+                      asyncio.exceptions.CancelledError,
+                      raise_on_giveup=False,
+                      giveup=fatal_code)
+@backoff.on_exception(backoff.expo,
+                      (OSError, asyncio.exceptions.TimeoutError))
 async def tcp_echo_client():
     """Считывает сообщения из сайта в консоль"""
 
@@ -29,9 +37,12 @@ async def tcp_echo_client():
         async with aiofiles.open(HISTORY_FILE, 'a') as f:  # записываем полученное сообщение в файл
             await f.write(f"[{dt.now().strftime('%Y-%m-%d %H:%M')}]{data.decode()}")
 
+
 if __name__ == '__main__':
 
     try:
         asyncio.run(tcp_echo_client())
     except KeyboardInterrupt:
-        logger.info("Прерываем работу сервера")  # логируем полученное сообщение
+        pass
+    finally:
+        logger.error('Работа сервера остановлена')
