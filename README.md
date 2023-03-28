@@ -34,16 +34,16 @@ poetry install
 poetry shell
 ```
 4. Переименуйте файл .env.dist в .env и заполните его параметрами подключения. Пример:
-* MINECHAT_HOST=minechat.dvmn.org
-* MINECHAT_PORT=5000
-* HISTORY_FILE=chat.txt
+* host=minechat.dvmn.org
+* port=5000
+* history=chat.txt
 
 
 ## Запуск проекта
 
 Запустите проект
 ```commandline
-python listen-minechat.py --host minechat.dvmn.org --port 5000 --history ~/minechat.history
+python listen-minechat.py
 ```
 В качестве альтернативы вы можете указать свои параметры подключения при запуске:
 ```commandline
