@@ -7,6 +7,7 @@ import aiofiles as aiofiles
 from datetime import datetime as dt
 
 import backoff as backoff
+import configargparse as configargparse
 
 from dotenv import load_dotenv
 load_dotenv()  # подгружаем переменные окружения из .env
@@ -45,17 +46,19 @@ async def tcp_echo_client(minechat_host: str, minechat_port: 'int > 0', minechat
             await f.write(f"[{dt.now().strftime('%Y-%m-%d %H:%M')}]{data.decode()}")
 
 
-def get_args() -> [str, bool]:
+def get_args() -> [str, int, str]:
     """Достает для проекта значения параметров командной строки"""
-    parser = argparse.ArgumentParser(description='Подключаемся к подпольному чату')
-    parser.add_argument('--host', type=str, default=os.getenv('MINECHAT_HOST'),
-                        help='Хост сервера с чатом (default: %(default)s)')
-    parser.add_argument('--port', type=int, default=os.getenv('MINECHAT_PORT'),
-                        help='Порт сервера с чатом (default: %(default)s)')
-    parser.add_argument('--history', type=str, default=os.getenv('HISTORY_FILE'),
-                        help='Файл для хранения истории чата (default: %(default)s)')
-    args = parser.parse_args()
-    return args.host, args.port, args.history
+
+    p = configargparse.ArgParser(default_config_files=['.env', ])
+    p.add('--host', type=str, required=False, default=os.getenv('host'), help='Хост сервера с чатом (default: %(default)s)')
+
+    # parser = argparse.ArgumentParser(description='Подключаемся к подпольному чату')
+
+    p.add('--port', type=int, required=False, default=os.getenv('port'), help='Порт сервера с чатом (default: %(default)s)')
+    p.add('--history', type=str, required=False, default=os.getenv('history'), help='Файл для хранения истории чата (default: %(default)s)')
+
+    options = p.parse_args()
+    return options.host, options.port, options.history
 
 
 if __name__ == '__main__':
