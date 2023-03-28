@@ -1,4 +1,3 @@
-import argparse
 import asyncio
 import logging.config
 import os
@@ -14,10 +13,6 @@ load_dotenv()  # подгружаем переменные окружения и
 
 logging.config.fileConfig('logging.ini', disable_existing_loggers=False)
 logger = logging.getLogger(__name__)
-
-MINECHAT_HOST = os.getenv('MINECHAT_HOST')
-MINECHAT_PORT = os.getenv('MINECHAT_PORT')
-HISTORY_FILE = os.getenv('HISTORY_FILE')
 
 
 def cancelled_handler(e) -> None:
@@ -50,12 +45,15 @@ def get_args() -> [str, int, str]:
     """Достает для проекта значения параметров командной строки"""
 
     p = configargparse.ArgParser(default_config_files=['.env', ])
-    p.add('--host', type=str, required=False, default=os.getenv('host'), help='Хост сервера с чатом (default: %(default)s)')
+    p.add('--host', type=str, required=False, default=os.getenv('host'),
+          help='Хост сервера с чатом (default: %(default)s)')
 
     # parser = argparse.ArgumentParser(description='Подключаемся к подпольному чату')
 
-    p.add('--port', type=int, required=False, default=os.getenv('port'), help='Порт сервера с чатом (default: %(default)s)')
-    p.add('--history', type=str, required=False, default=os.getenv('history'), help='Файл для хранения истории чата (default: %(default)s)')
+    p.add('--port', type=int, required=False, default=os.getenv('port'),
+          help='Порт сервера с чатом (default: %(default)s)')
+    p.add('--history', type=str, required=False, default=os.getenv('history'),
+          help='Файл для хранения истории чата (default: %(default)s)')
 
     options = p.parse_args()
     return options.host, options.port, options.history
