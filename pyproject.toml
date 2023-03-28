@@ -12,6 +12,7 @@ aiohttp = "^3.8.4"
 aiofiles = "^23.1.0"
 flake8 = "^6.0.0"
 backoff = "^2.2.1"
+python-dotenv = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^6.0.0"
