@@ -23,7 +23,7 @@ git clone https://github.com/s-klimov/underground-chat-cli.git
 * python версии 3.10 и выше
 * poetry версии 1.4.x
 
-### Установка проекта
+### Развертывание
 
 1. Установите зависимости
 ```commandline
