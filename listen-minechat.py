@@ -14,6 +14,7 @@ load_dotenv()  # подгружаем переменные окружения и
 logging.config.fileConfig('logging.ini', disable_existing_loggers=False)
 logger = logging.getLogger(__name__)
 
+PARTICIPANT = {"nickname": "Happy sergei", "account_hash": "f007e00c-cd77-11ed-ad76-0242ac110002"}
 
 def cancelled_handler(e) -> None:
     """Обработчик для исключения asyncio.exceptions.CancelledError"""
