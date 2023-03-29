@@ -1,8 +1,3 @@
-
-```commandline
-listen-minechat.py --host minechat.dvmn.org --port 5000 --history ~/minechat.history
-```
-
 # Подключаемся к подпольному чату Майнкрафт
 
 Сервис для подключения к чату обмена кодами Майнкрафт
@@ -33,21 +28,43 @@ poetry install
 ```commandline
 poetry shell
 ```
-4. Переименуйте файл .env.dist в .env и заполните его параметрами подключения. Пример:
+4. Переименуйте файл .env.dist в .env и заполните его параметрами подключения.  
+
+Назначение параметров:
+* host -- хост сервера с чатом
+* port -- порт сервера с чатом
+* history -- путь к файлу для хранения истории чата
+* account -- хэш аккаунта для написания сообщений в чат  
+
+Пример:  
 * host=minechat.dvmn.org
 * port=5000
 * history=chat.txt
-
+* account=f007e00c-cd77-11ed-ad76-0242ac110002
 
 ## Запуск проекта
 
-Запустите проект
+### Запустите скрипт прослушивания чата
 ```commandline
 python listen-minechat.py
 ```
 В качестве альтернативы вы можете указать свои параметры подключения при запуске:
 ```commandline
 python listen-minechat.py --host minechat.dvmn.org --port 5000 --history ~/minechat.history
+```
+Чтобы получить справку по параметрам:
+```commandline
+python listen-minechat.py --help
+```
+
+### Запустите скрипт написания сообщения в чат
+```commandline
+python listen-minechat.py --port 5050
+```
+> порт для написания сообщения в чат должен отличаться от порта, указываемого для пролсушивания чата  
+В качестве альтернативы вы можете указать свои параметры подключения при запуске:
+```commandline
+python listen-minechat.py --host minechat.dvmn.org --port 5050 --account f007e00c-cd77-11ed-ad76-0242ac110002
 ```
 Чтобы получить справку по параметрам:
 ```commandline
