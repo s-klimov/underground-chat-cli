@@ -1,7 +1,7 @@
 import asyncio
 import backoff as backoff
 
-from common import get_args, cancelled_handler, logger
+from common import cancelled_handler, logger, WriteArgs
 
 
 @backoff.on_exception(backoff.expo,
@@ -32,12 +32,13 @@ async def write_messages(minechat_host: str, minechat_port: 'int > 0', account_h
 
 if __name__ == '__main__':
 
-    host, port, _, account_hash = get_args()
+    args = WriteArgs()
+    options = args.get_args()
 
     message = input('Что напишем в чат: ').strip()
 
     try:
-        asyncio.run(write_messages(host, port, account_hash, message))
+        asyncio.run(write_messages(options.host, options.port, options.account, message))
     except KeyboardInterrupt:
         pass
     finally:
