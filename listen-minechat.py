@@ -7,6 +7,8 @@ import backoff as backoff
 
 from common import cancelled_handler, logger, ListenArgs
 
+logger.name = "LISTENER"
+
 
 @backoff.on_exception(backoff.expo,
                       asyncio.exceptions.CancelledError,
@@ -21,7 +23,7 @@ async def listen_messages(minechat_host: str, minechat_port: 'int > 0', minechat
 
     while data := await reader.readline():
 
-        logger.info(data.decode().replace('\n', ''))  # логируем полученное сообщение
+        logger.debug(data.decode().replace('\n', ''))  # логируем полученное сообщение
 
         async with aiofiles.open(minechat_history_file, 'a') as f:  # записываем полученное сообщение в файл
             await f.write(f"[{dt.now().strftime('%Y-%m-%d %H:%M')}]{data.decode()}")
@@ -37,4 +39,4 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
     finally:
-        logger.error('Работа сервера остановлена')
+        logger.info('Работа сервера остановлена')

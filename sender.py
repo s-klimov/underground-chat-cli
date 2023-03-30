@@ -3,6 +3,8 @@ import backoff as backoff
 
 from common import cancelled_handler, logger, WriteArgs
 
+logger.name = "SENDER"
+
 
 @backoff.on_exception(backoff.expo,
                       asyncio.exceptions.CancelledError,
@@ -16,16 +18,16 @@ async def write_messages(minechat_host: str, minechat_port: 'int > 0', account_h
     _, writer = await asyncio.open_connection(minechat_host, minechat_port)
 
     # сначала логинимся в чате
-    logger.info(f'Send: {account_hash!r}')
+    logger.debug(account_hash)
     writer.write(f"{account_hash}\n".encode())
     await writer.drain()
 
     # Приветствуем участников чата
-    logger.info(f'Send: {message!r}')
+    logger.debug(message)
     writer.writelines([f"{message}\n".encode(), '\n'.encode()])
     await writer.drain()
 
-    logger.info('Close the connection')
+    logger.debug('Close the connection')
     writer.close()
     await writer.wait_closed()
 
@@ -42,4 +44,4 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
     finally:
-        logger.error('Работа сервера остановлена')
+        logger.info('Работа сервера остановлена')

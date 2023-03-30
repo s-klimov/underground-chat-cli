@@ -59,16 +59,16 @@ python listen-minechat.py --help
 
 ### Запустите скрипт написания сообщения в чат
 ```commandline
-python listen-minechat.py --port 5050
+python sender.py --port 5050
 ```
 > порт для написания сообщения в чат должен отличаться от порта, указываемого для пролсушивания чата  
 В качестве альтернативы вы можете указать свои параметры подключения при запуске:
 ```commandline
-python listen-minechat.py --host minechat.dvmn.org --port 5050 --account f007e00c-cd77-11ed-ad76-0242ac110002
+python sender.py --host minechat.dvmn.org --port 5050 --account f007e00c-cd77-11ed-ad76-0242ac110002
 ```
 Чтобы получить справку по параметрам:
 ```commandline
-python listen-minechat.py --help
+python sender.py --help
 ```
 
 ## Используемый стек
