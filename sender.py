@@ -1,4 +1,6 @@
 import asyncio
+import json
+
 import backoff as backoff
 
 from common import cancelled_handler, logger, WriteArgs
@@ -15,21 +17,31 @@ logger.name = "SENDER"
 async def write_messages(minechat_host: str, minechat_port: 'int > 0', account_hash: str, message: str) -> None:
     """Считывает сообщения из сайта в консоль"""
 
-    _, writer = await asyncio.open_connection(minechat_host, minechat_port)
+    reader, writer = await asyncio.open_connection(minechat_host, minechat_port)
 
     # сначала логинимся в чате
+    await reader.readline()  # пропускаем строку-приглашение
     logger.debug(account_hash)
     writer.write(f"{account_hash}\n".encode())
     await writer.drain()
+    response = await reader.readline()  # получаем результат аутентификации
 
-    # Приветствуем участников чата
-    logger.debug(message)
-    writer.writelines([f"{message}\n".encode(), '\n'.encode()])
-    await writer.drain()
+    try:
+        if json.loads(response) is None:  # Если результат аутентификации null, то прекращаем выполнение скрипта
+            raise ValueError('Неизвестный токен. Проверьте его или зарегистрируйте заново.')
 
-    logger.debug('Close the connection')
-    writer.close()
-    await writer.wait_closed()
+        # Приветствуем участников чата
+        logger.debug(message)
+        writer.writelines([f"{message}\n".encode(), '\n'.encode()])
+        await writer.drain()
+
+    except ValueError as e:
+        logger.debug(str(e))
+
+    finally:
+        logger.debug('Закрываем соединение')
+        writer.close()
+        await writer.wait_closed()
 
 
 if __name__ == '__main__':
