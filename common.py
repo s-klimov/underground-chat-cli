@@ -41,7 +41,8 @@ class WriteArgs(CommonArgs):
         super().__init__()
         self._parser.add('--account', type=str, required=False, default=os.getenv('account'),
                          help='Хэш аккаунта для написания сообщений в чат (default: %(default)s)')
-
+        self._parser.add('--register', type=str, required=False,
+                         help='Имя пользователя для регистрации')
 
 def cancelled_handler(e) -> None:
     """Обработчик для исключения asyncio.exceptions.CancelledError"""
