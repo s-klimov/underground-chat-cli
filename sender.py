@@ -1,5 +1,8 @@
 import asyncio
 import json
+import re
+from functools import wraps
+from pathlib import Path
 
 import aiofiles
 import backoff as backoff
@@ -31,8 +34,44 @@ async def register(minechat_host: str, minechat_port: 'int > 0', user_name: str)
     except ValueError as e:
         logger.debug(str(e))
     else:
-        async with aiofiles.open(USERS_FILE, 'a') as f:  # записываем полученное сообщение в файл
-            await f.write(json.dumps(user) + '\n')
+        my_file = Path(USERS_FILE)
+        if my_file.is_file():
+            async with aiofiles.open(USERS_FILE, 'r') as f:
+                users = json.loads(await f.read())
+        else:
+            users = dict()
+
+        users[user['nickname']] = user['account_hash']
+        async with aiofiles.open(USERS_FILE, 'w') as f:  # записываем полученное сообщение в файл
+            await f.write(json.dumps(users))
+    finally:
+        logger.debug('Закрываем соединение')
+        writer.close()
+        await writer.wait_closed()
+
+
+def authorise(function):
+    @wraps(function)
+    async def wrapper(minechat_host: str, minechat_port: 'int > 0', account_hash: str):
+
+        reader, writer = await asyncio.open_connection(minechat_host, minechat_port)
+
+        await reader.readline()  # пропускаем строку-приглашение
+        logger.debug(account_hash)
+        writer.write(f"{account_hash}\n".encode())
+        await writer.drain()
+        response = await reader.readline()  # получаем результат аутентификации
+
+        if json.loads(response) is None:  # Если результат аутентификации null, то прекращаем выполнение скрипта
+            raise ValueError('Неизвестный токен. Проверьте его или зарегистрируйте заново.')
+
+        await function(minechat_host, minechat_port, account_hash, reader=reader, writer=writer)
+
+        logger.debug('Закрываем соединение')
+        writer.close()
+        await writer.wait_closed()
+
+    return wrapper
 
 
 @backoff.on_exception(backoff.expo,
@@ -40,35 +79,19 @@ async def register(minechat_host: str, minechat_port: 'int > 0', user_name: str)
                       raise_on_giveup=False,
                       giveup=cancelled_handler)
 @backoff.on_exception(backoff.expo,
-                      (OSError, asyncio.exceptions.TimeoutError))
-async def write_messages(minechat_host: str, minechat_port: 'int > 0', account_hash: str, message: str) -> None:
-    """Считывает сообщения из сайта в консоль"""
+                      (OSError, asyncio.exceptions.TimeoutError),
+                      max_tries=3)
+@authorise
+async def submit_message(*args, **kwargs) -> None:
+    """Считывает сообщения из сайта в консоль
+    """
+    message = input('Что напишем в чат: ').strip()
 
-    reader, writer = await asyncio.open_connection(minechat_host, minechat_port)
+    reader, writer = kwargs['reader'], kwargs['writer']
 
-    # сначала логинимся в чате
-    await reader.readline()  # пропускаем строку-приглашение
-    logger.debug(account_hash)
-    writer.write(f"{account_hash}\n".encode())
+    writer.writelines([f'{message}\n'.encode(), '\n'.encode()])
     await writer.drain()
-    response = await reader.readline()  # получаем результат аутентификации
-
-    try:
-        if json.loads(response) is None:  # Если результат аутентификации null, то прекращаем выполнение скрипта
-            raise ValueError('Неизвестный токен. Проверьте его или зарегистрируйте заново.')
-
-        # Приветствуем участников чата
-        logger.debug(message)
-        writer.writelines([f"{message}\n".encode(), '\n'.encode()])
-        await writer.drain()
-
-    except ValueError as e:
-        logger.debug(str(e))
-
-    finally:
-        logger.debug('Закрываем соединение')
-        writer.close()
-        await writer.wait_closed()
+    logger.debug(message)
 
 
 if __name__ == '__main__':
@@ -80,9 +103,11 @@ if __name__ == '__main__':
         if options.register:
             asyncio.run(register(options.host, options.port, options.register))
         else:
-            message = input('Что напишем в чат: ').strip()
-            asyncio.run(write_messages(options.host, options.port, options.account, message))
+            asyncio.run(submit_message(options.host, options.port, options.account))
+
     except KeyboardInterrupt:
         pass
+    except ValueError as e:
+        logger.error(str(e))
     finally:
         logger.info('Работа сервера остановлена')
