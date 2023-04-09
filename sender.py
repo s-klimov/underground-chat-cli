@@ -86,6 +86,7 @@ async def submit_message(*args, **kwargs) -> None:
     """Считывает сообщения из сайта в консоль
     """
     message = input('Что напишем в чат: ').strip()
+    message = re.sub(r'\\n', '', message)
 
     reader, writer = kwargs['reader'], kwargs['writer']
 
