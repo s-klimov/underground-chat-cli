@@ -1,13 +1,14 @@
 import asyncio
 import json
 import re
+import uuid
 from functools import wraps
 from pathlib import Path
 
 import aiofiles
 import backoff as backoff
 
-from common import cancelled_handler, logger, WriteArgs
+from common import cancelled_handler, logger, WriteArgs, Authorise
 
 logger.name = "SENDER"
 USERS_FILE = "users.json"
@@ -52,7 +53,13 @@ async def register(minechat_host: str, minechat_port: 'int > 0', user_name: str)
 
 def authorise(function):
     @wraps(function)
-    async def wrapper(minechat_host: str, minechat_port: 'int > 0', account_hash: str):
+    async def wrapper(*args):
+        breakpoint()
+        match args:
+            case (str, int, uuid.UUID):
+                minechat_host, minechat_port, account_hash = args
+            case _:
+                raise SyntaxError
 
         reader, writer = await asyncio.open_connection(minechat_host, minechat_port)
 
@@ -81,18 +88,17 @@ def authorise(function):
 @backoff.on_exception(backoff.expo,
                       (OSError, asyncio.exceptions.TimeoutError),
                       max_tries=3)
-@authorise
-async def submit_message(*args, **kwargs) -> None:
+# @authorise
+async def submit_message(minechat_host: str, minechat_port: 'int >0', account_hash: uuid.UUID, message:str) -> None:
     """Считывает сообщения из сайта в консоль
     """
     message = input('Что напишем в чат: ').strip()
     message = re.sub(r'\\n', '', message)
 
-    reader, writer = kwargs['reader'], kwargs['writer']
-
-    writer.writelines([f'{message}\n'.encode(), '\n'.encode()])
-    await writer.drain()
-    logger.debug(message)
+    async with Authorise(minechat_host, minechat_port, account_hash) as (_, writer):
+        writer.writelines([f'{message}\n'.encode(), '\n'.encode()])
+        await writer.drain()
+        logger.debug(message)
 
 
 if __name__ == '__main__':
@@ -101,10 +107,14 @@ if __name__ == '__main__':
     options = args.get_args()
 
     try:
-        if options.register:
-            asyncio.run(register(options.host, options.port, options.register))
-        else:
-            asyncio.run(submit_message(options.host, options.port, options.account))
+        asyncio.run(
+            submit_message(
+                options.host,
+                options.port,
+                options.register or options.account,
+                options.message,
+            )
+        )
 
     except KeyboardInterrupt:
         pass
