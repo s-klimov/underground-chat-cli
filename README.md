@@ -34,7 +34,7 @@ poetry shell
 * host -- хост сервера с чатом
 * port -- порт сервера с чатом
 * history -- путь к файлу для хранения истории чата
-* account -- хэш аккаунта для написания сообщений в чат  
+* account -- хэш аккаунта для написания сообщений в чат
 
 Пример:  
 * host=minechat.dvmn.org
@@ -59,13 +59,22 @@ python listen-minechat.py --help
 
 ### Запустите скрипт написания сообщения в чат
 ```commandline
-python sender.py --port 5050
+python sender.py --port 5050 --message 'Напишите сюда сообщение'
 ```
 > порт для написания сообщения в чат должен отличаться от порта, указываемого для пролсушивания чата  
 В качестве альтернативы вы можете указать свои параметры подключения при запуске:
 ```commandline
-python sender.py --host minechat.dvmn.org --port 5050 --account f007e00c-cd77-11ed-ad76-0242ac110002
+python sender.py --host minechat.dvmn.org --port 5050 --account f007e00c-cd77-11ed-ad76-0242ac110002 --message 'Напишите сюда сообщение'
 ```
+Можно одновременно зарегистрировать нового пользователя и отправить от его имени сообщение:
+```commandline
+python sender.py --host minechat.dvmn.org --port 5050 --register 'Cool Bot' --message 'Напишите сюда сообщение'
+```
+После успешной регистрации пользователя его учетная запись сохраняется в файле users.json:
+```commandline
+cat users.json
+```
+Параметр скрипта sender.py register имеет `приоритет` над параметром `account`.  
 Чтобы получить справку по параметрам:
 ```commandline
 python sender.py --help
