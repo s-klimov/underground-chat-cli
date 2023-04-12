@@ -31,15 +31,15 @@ async def submit_message(minechat_host: str, minechat_port: 'int >0', account: u
     # Если на вход получена информация об аккаунте в виде строки, то интерпретируем её как имя пользователя
     # для регистрации в в чате
     if isinstance(account, uuid.UUID):
-        Action = Authorise
+        action = Authorise
     elif isinstance(account, str):
-        Action = Register
+        action = Register
     elif account is None:
         raise ValueError('Не получены хэш аккаунта или имя для регистрации')
     else:
         raise SyntaxError('Ошибка кода программы, обратитесь к разработчику')
 
-    async with Action(account=account, minechat_host=minechat_host, minechat_port=minechat_port) as (_, writer):
+    async with action(account=account, minechat_host=minechat_host, minechat_port=minechat_port) as (_, writer):
         writer.writelines([message_line, line_feed])
         await writer.drain()
         logger.debug(message)
