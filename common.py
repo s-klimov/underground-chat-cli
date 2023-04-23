@@ -5,6 +5,7 @@ import re
 import uuid
 
 import asyncio
+from json import JSONDecodeError
 from pathlib import Path
 
 import aiofiles
@@ -113,7 +114,6 @@ class Register(CommonAuth):
         """Метод асинхронного контекстного менеджера"""
 
         reader, writer = await super().__aenter__()
-
         await reader.readline()  # пропускаем строку-приглашение ввода хэша аккаунта
         writer.write("\n".encode())  # вводим пустую строку, чтобы получить приглашение для регистрации
         await writer.drain()
@@ -123,7 +123,12 @@ class Register(CommonAuth):
         await writer.drain()
         response = await reader.readline()  # получаем результат регистрации
 
-        user = json.loads(response)
+        try:
+            user = json.loads(response)
+        except JSONDecodeError:
+            raise ValueError(
+                f'Ошибка регистрации пользователя. Проверьте настройки подключения к серверу. Например порт'
+            )
 
         if json.loads(response) is None:  # Если результат аутентификации null, то прекращаем выполнение скрипта
             raise ValueError(f'Ошибка регистрации пользователя. Ответ сервера {response}')
