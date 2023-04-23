@@ -127,7 +127,7 @@ class Register(CommonAuth):
             user = json.loads(response)
         except JSONDecodeError:
             raise ValueError(
-                f'Ошибка регистрации пользователя. Проверьте настройки подключения к серверу. Например порт'
+                'Ошибка регистрации пользователя. Проверьте настройки подключения к серверу. Например порт'
             )
 
         if json.loads(response) is None:  # Если результат аутентификации null, то прекращаем выполнение скрипта
