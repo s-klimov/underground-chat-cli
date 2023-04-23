@@ -1,7 +1,8 @@
 import asyncio
 import time
 
-from common import gui, GUIArgs
+from common import gui, GUIArgs, ListenArgs
+from listen_minechat import listen_messages
 
 
 async def generate_msgs(messages_queue):
@@ -10,7 +11,7 @@ async def generate_msgs(messages_queue):
         await asyncio.sleep(1)
 
 
-async def main(loop):
+async def main(loop, options):
 
     messages_queue = asyncio.Queue()
     sending_queue = asyncio.Queue()
@@ -21,7 +22,7 @@ async def main(loop):
 
     # https://docs.python.org/3/library/asyncio-task.html#running-tasks-concurrently
     await asyncio.gather(
-        generate_msgs(messages_queue),
+        listen_messages(options.host, options.port, options.history, messages_queue),
     )
 
     await task1
@@ -29,9 +30,9 @@ async def main(loop):
 
 if __name__ == '__main__':
 
-    args = GUIArgs()
+    args = ListenArgs()
     options = args.get_args()
 
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(main(loop))
+    loop.run_until_complete(main(loop, options))
     loop.close()

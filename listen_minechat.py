@@ -1,4 +1,5 @@
 import asyncio
+from typing import Optional
 
 import aiofiles as aiofiles
 from datetime import datetime as dt
@@ -16,7 +17,12 @@ logger.name = "LISTENER"
                       giveup=cancelled_handler)
 @backoff.on_exception(backoff.expo,
                       (OSError, asyncio.exceptions.TimeoutError))
-async def listen_messages(minechat_host: str, minechat_port: 'int > 0', minechat_history_file: str) -> None:
+async def listen_messages(
+        minechat_host: str,
+        minechat_port: 'int > 0',
+        minechat_history_file: str,
+        queue: Optional[asyncio.Queue] = None,
+) -> None:
     """Считывает сообщения из сайта в консоль"""
 
     reader, _ = await asyncio.open_connection(minechat_host, minechat_port)
@@ -27,6 +33,9 @@ async def listen_messages(minechat_host: str, minechat_port: 'int > 0', minechat
 
         async with aiofiles.open(minechat_history_file, 'a') as f:  # записываем полученное сообщение в файл
             await f.write(f"[{dt.now().strftime('%Y-%m-%d %H:%M')}]{data.decode()}")
+
+        if queue is not None:
+            queue.put_nowait(data.decode().replace('\n', ''))
 
 
 if __name__ == '__main__':

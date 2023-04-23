@@ -46,15 +46,15 @@ poetry shell
 
 ### Запустите скрипт прослушивания чата
 ```commandline
-python listen-minechat.py
+python listen_minechat.py
 ```
 В качестве альтернативы вы можете указать свои параметры подключения при запуске:
 ```commandline
-python listen-minechat.py --host minechat.dvmn.org --port 5000 --history ~/minechat.history
+python listen_minechat.py --host minechat.dvmn.org --port 5000 --history ~/minechat.history
 ```
 Чтобы получить справку по параметрам:
 ```commandline
-python listen-minechat.py --help
+python listen_minechat.py --help
 ```
 
 ### Запустите скрипт написания сообщения в чат
