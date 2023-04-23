@@ -51,13 +51,23 @@ class WriteArgs(CommonArgs):
     def __init__(self):
         """Добавляем специфические параметры командной строки для скрипта написания сообщений в чат"""
         super().__init__()
-        self._parser.add('--account', type=uuid.UUID, required=False, default=os.getenv('account'),
+        self._parser.add('--account', type=uuid.UUID, required=False, default=os.getenv('ACCOUNT'),
                          help='Хэш аккаунта для написания сообщений в чат (default: %(default)s). '
                               'Если задан параметр register, то account игнорируется.')
         self._parser.add('--register', type=str, required=False,
                          help='Имя пользователя для регистрации')
         self._parser.add('--message', type=str, required=True,
                          help='Текст сообщения для отправки в чат')
+
+
+class GUIArgs(CommonArgs):
+    """Класс параметров скрипта графического интерфейса"""
+
+    def __init__(self):
+        """Добавляем специфические параметры командной строки для скрипта написания сообщений в чат"""
+        super().__init__()
+        self._parser.add('--account', type=uuid.UUID, required=False, default=os.getenv('ACCOUNT'),
+                         help='Хэш аккаунта для написания сообщений в чат (default: %(default)s).')
 
 
 class CommonAuth:

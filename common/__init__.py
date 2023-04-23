@@ -3,6 +3,7 @@ from .common import (  # noqa F401
     logger,
     WriteArgs,
     ListenArgs,
+    GUIArgs,
     Authorise,
-    Register
+    Register,
 )
