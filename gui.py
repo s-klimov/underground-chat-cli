@@ -1,14 +1,17 @@
 import asyncio
 import time
 
+from aiofile import async_open
+
 from common import gui, GUIArgs, ListenArgs
 from listen_minechat import listen_messages
 
 
-async def generate_msgs(messages_queue):
-    while True:
-        messages_queue.put_nowait("Ping %d" % time.time())
-        await asyncio.sleep(1)
+async def load_history(filepath: str, messages_queue: asyncio.Queue):
+    async with async_open(filepath) as f:
+        while message := await f.readline():
+            messages_queue.put_nowait(message.rstrip())
+            await asyncio.sleep(0)
 
 
 async def main(loop, options):
@@ -22,6 +25,7 @@ async def main(loop, options):
 
     # https://docs.python.org/3/library/asyncio-task.html#running-tasks-concurrently
     await asyncio.gather(
+        load_history(options.history, messages_queue),
         listen_messages(options.host, options.port, options.history, messages_queue),
     )
 

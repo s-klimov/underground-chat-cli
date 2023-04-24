@@ -28,12 +28,12 @@ async def listen_messages(
 
     while data := await reader.readline():
 
-        logger.debug(data.decode().replace('\n', ''))  # логируем полученное сообщение
+        logger.debug(data.decode().rstrip())  # логируем полученное сообщение
 
         await save_messages(filepath=minechat_history_file, message=data.decode())
 
         if queue is not None:
-            queue.put_nowait(data.decode().replace('\n', ''))
+            queue.put_nowait(data.decode().rstrip())
 
 
 async def save_messages(filepath: str, message: str):
