@@ -1,8 +1,7 @@
 import asyncio
 from typing import Optional
 
-import aiofiles as aiofiles
-from datetime import datetime as dt
+from aiofile import async_open
 
 import backoff as backoff
 
@@ -31,11 +30,17 @@ async def listen_messages(
 
         logger.debug(data.decode().replace('\n', ''))  # логируем полученное сообщение
 
-        async with aiofiles.open(minechat_history_file, 'a') as f:  # записываем полученное сообщение в файл
-            await f.write(f"[{dt.now().strftime('%Y-%m-%d %H:%M')}]{data.decode()}")
+        await save_messages(filepath=minechat_history_file, message=data.decode())
 
         if queue is not None:
             queue.put_nowait(data.decode().replace('\n', ''))
+
+
+async def save_messages(filepath: str, message: str):
+    """Сохраняет сообщение в файл"""
+
+    async with async_open(filepath, 'a') as afp:
+        await afp.write(message)
 
 
 if __name__ == '__main__':

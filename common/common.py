@@ -5,10 +5,10 @@ import re
 import uuid
 
 import asyncio
+from aiofile import async_open
 from json import JSONDecodeError
 from pathlib import Path
 
-import aiofiles
 import configargparse as configargparse
 from dotenv import load_dotenv
 
@@ -147,13 +147,13 @@ class Register(CommonAuth):
         # записываем полученное сообщение в файл
         my_file = Path(USERS_FILE)
         if my_file.is_file():
-            async with aiofiles.open(USERS_FILE, 'r') as f:
+            async with async_open(USERS_FILE, 'r') as f:
                 users = json.loads(await f.read())
         else:
             users = dict()
 
         users[user['nickname']] = user['account_hash']
-        async with aiofiles.open(USERS_FILE, 'w') as f:
+        async with async_open(USERS_FILE, 'w') as f:
             await f.write(json.dumps(users))
 
         return reader, writer
