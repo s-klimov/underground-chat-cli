@@ -1,5 +1,6 @@
 import asyncio
 import time
+from pathlib import Path
 
 from aiofile import async_open
 
@@ -8,10 +9,14 @@ from listen_minechat import listen_messages
 
 
 async def load_history(filepath: str, messages_queue: asyncio.Queue):
+
+    if not Path(filepath).is_file():
+        return
+
     async with async_open(filepath) as f:
         while message := await f.readline():
             messages_queue.put_nowait(message.rstrip())
-            await asyncio.sleep(0)
+            # await asyncio.sleep(0)
 
 
 async def main(loop, options):
