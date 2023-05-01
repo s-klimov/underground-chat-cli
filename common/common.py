@@ -66,6 +66,8 @@ class GUIArgs(CommonArgs):
     def __init__(self):
         """Добавляем специфические параметры командной строки для скрипта написания сообщений в чат"""
         super().__init__()
+        self._parser.add('--history', type=str, required=False, default=os.getenv('HISTORY'),
+                         help='Путь к файлу для хранения истории чата (default: %(default)s)')
         self._parser.add('--account', type=uuid.UUID, required=False, default=os.getenv('ACCOUNT'),
                          help='Хэш аккаунта для написания сообщений в чат (default: %(default)s).')
 
