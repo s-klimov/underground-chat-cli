@@ -17,8 +17,7 @@ logger.name = "SENDER"
 @backoff.on_exception(backoff.expo,
                       (OSError, asyncio.exceptions.TimeoutError),
                       max_tries=3)
-async def submit_message(minechat_host: str, minechat_port: 'int >0', account: uuid.UUID | str, message: str,
-                         queue: Optional[asyncio.Queue] = None) -> None:
+async def submit_message(minechat_host: str, minechat_port: 'int >0', account: uuid.UUID | str, message: str) -> None:
     """Считывает сообщения из сайта в консоль
     params:
     minechat_host -- хост сервера с чатом
@@ -45,9 +44,6 @@ async def submit_message(minechat_host: str, minechat_port: 'int >0', account: u
         writer.writelines([message_line, line_feed])
         await writer.drain()
         logger.debug(message)
-
-    if queue is not None:
-        queue.put_nowait(message)
 
 
 if __name__ == '__main__':

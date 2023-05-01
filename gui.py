@@ -32,16 +32,19 @@ async def main(loop, options):
     await asyncio.gather(
         load_history(options.history, messages_queue),
         listen_messages(options.host, options.port, options.history, messages_queue),
+        send_messages(sending_queue),
     )
 
     await task1
 
-    if msg := await sending_queue.get():
-        task2 = loop.create_task(
-            submit_message('minechat.dvmn.org', 5050, UUID('f007e00c-cd77-11ed-ad76-0242ac110002'), msg, sending_queue)
-        )
 
-        await task2
+async def send_messages(queue):
+
+    while msg := await queue.get():
+        task = loop.create_task(
+            submit_message('minechat.dvmn.org', 5050, UUID('f007e00c-cd77-11ed-ad76-0242ac110002'), msg)
+        )
+        await task
 
 
 if __name__ == '__main__':
