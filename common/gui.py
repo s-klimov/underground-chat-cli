@@ -31,9 +31,10 @@ class NicknameReceived:
         self.nickname = nickname
 
 
-def process_new_message(input_field, messages_queue):
+def process_new_message(input_field, messages_queue, sending_queue):
     text = input_field.get()
     messages_queue.put_nowait(text)
+    sending_queue.put_nowait(text)
     input_field.delete(0, tk.END)
 
 
@@ -116,11 +117,11 @@ async def draw(messages_queue, sending_queue, status_updates_queue):
     input_field = tk.Entry(input_frame)
     input_field.pack(side="left", fill=tk.X, expand=True)
 
-    input_field.bind("<Return>", lambda event: process_new_message(input_field, messages_queue))
+    input_field.bind("<Return>", lambda event: process_new_message(input_field, messages_queue, sending_queue))
 
     send_button = tk.Button(input_frame)
     send_button["text"] = "Отправить"
-    send_button["command"] = lambda: process_new_message(input_field, messages_queue)
+    send_button["command"] = lambda: process_new_message(input_field, messages_queue, sending_queue)
     send_button.pack(side="left")
 
     conversation_panel = ScrolledText(root_frame, wrap='none')
@@ -129,5 +130,5 @@ async def draw(messages_queue, sending_queue, status_updates_queue):
     await asyncio.gather(
         update_tk(root_frame),
         update_conversation_history(conversation_panel, messages_queue),
-        update_status_panel(status_labels, status_updates_queue)
+        update_status_panel(status_labels, status_updates_queue),
     )

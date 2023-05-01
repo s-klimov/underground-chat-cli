@@ -1,11 +1,12 @@
 import asyncio
-import time
 from pathlib import Path
+from uuid import UUID
 
 from aiofile import async_open
 
-from common import gui, GUIArgs, ListenArgs
+from common import gui, GUIArgs
 from listen_minechat import listen_messages
+from sender import submit_message
 
 
 async def load_history(filepath: str, messages_queue: asyncio.Queue):
@@ -16,7 +17,6 @@ async def load_history(filepath: str, messages_queue: asyncio.Queue):
     async with async_open(filepath) as f:
         while message := await f.readline():
             messages_queue.put_nowait(message.rstrip())
-            # await asyncio.sleep(0)
 
 
 async def main(loop, options):
@@ -36,10 +36,17 @@ async def main(loop, options):
 
     await task1
 
+    if msg := await sending_queue.get():
+        task2 = loop.create_task(
+            submit_message('minechat.dvmn.org', 5050, UUID('f007e00c-cd77-11ed-ad76-0242ac110002'), msg, sending_queue)
+        )
+
+        await task2
+
 
 if __name__ == '__main__':
 
-    args = ListenArgs()
+    args = GUIArgs()
     options = args.get_args()
 
     loop = asyncio.get_event_loop()
