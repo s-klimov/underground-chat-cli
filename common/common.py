@@ -105,13 +105,17 @@ class Authorise(CommonAuth):
         reader, writer = await super().__aenter__()
 
         await reader.readline()  # пропускаем строку-приглашение
-        logger.debug(self.__account_hash)
         writer.write(f"{self.__account_hash}\n".encode())
         await writer.drain()
         response = await reader.readline()  # получаем результат аутентификации
 
-        if json.loads(response) is None:  # Если результат аутентификации null, то прекращаем выполнение скрипта
+        auth = json.loads(response)
+
+        if auth is None:  # Если результат аутентификации null, то прекращаем выполнение скрипта
             raise ValueError('Неизвестный токен. Проверьте его или зарегистрируйте заново.')
+
+        logger.debug(f'Выполнена авторизация по токену {self.__account_hash}. Пользователь {auth["nickname"]}')
+
         return reader, writer
 
 

@@ -1,10 +1,11 @@
 import asyncio
+import re
 from pathlib import Path
 from uuid import UUID
 
 from aiofile import async_open
 
-from common import gui, GUIArgs
+from common import gui, GUIArgs, Authorise
 from listen_minechat import listen_messages
 from sender import submit_message
 
@@ -28,23 +29,26 @@ async def main(loop, options):
     # https://docs.python.org/3/library/asyncio-task.html#coroutines
     task1 = loop.create_task(gui.draw(messages_queue, sending_queue, status_updates_queue))
 
-    # https://docs.python.org/3/library/asyncio-task.html#running-tasks-concurrently
-    await asyncio.gather(
-        load_history(options.history, messages_queue),
-        listen_messages(options.host, options.port, options.history, messages_queue),
-        send_messages(sending_queue),
-    )
+    async with Authorise(account=options.account, minechat_host=options.host, minechat_port=5050) as (_, writer):
 
-    await task1
-
-
-async def send_messages(queue):
-
-    while msg := await queue.get():
-        task = loop.create_task(
-            submit_message('minechat.dvmn.org', 5050, UUID('f007e00c-cd77-11ed-ad76-0242ac110002'), msg)
+        # https://docs.python.org/3/library/asyncio-task.html#running-tasks-concurrently
+        await asyncio.gather(
+            load_history(options.history, messages_queue),
+            listen_messages(options.host, options.port, options.history, messages_queue),
+            send_messages(sending_queue, writer),
         )
-        await task
+
+        await task1
+
+
+async def send_messages(queue, writer):
+
+    while message := await queue.get():
+        message_line = ''.join([re.sub(r'\\n', ' ', message), '\n']).encode()
+        line_feed = '\n'.encode()
+
+        writer.writelines([message_line, line_feed])
+        await writer.drain()
 
 
 if __name__ == '__main__':
