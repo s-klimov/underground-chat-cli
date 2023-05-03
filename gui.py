@@ -1,13 +1,13 @@
 import asyncio
+import logging
 import re
 from pathlib import Path
-from uuid import UUID
 
 from aiofile import async_open
 
 from common import gui, GUIArgs, Authorise
+from common.common import InvalidToken
 from listen_minechat import listen_messages
-from sender import submit_message
 
 
 async def load_history(filepath: str, messages_queue: asyncio.Queue):
@@ -57,5 +57,12 @@ if __name__ == '__main__':
     options = args.get_args()
 
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(main(loop, options))
-    loop.close()
+    try:
+        loop.run_until_complete(main(loop, options))
+    except InvalidToken as e:
+        logging.error(str(e))
+    except KeyboardInterrupt:
+        pass
+    finally:
+        loop.close()
+        logging.info('Работа сервера остановлена')

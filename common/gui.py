@@ -1,5 +1,6 @@
 import tkinter as tk
 import asyncio
+from tkinter import messagebox
 from tkinter.scrolledtext import ScrolledText
 from enum import Enum
 
@@ -131,3 +132,13 @@ async def draw(messages_queue, sending_queue, status_updates_queue):
         update_conversation_history(conversation_panel, messages_queue),
         update_status_panel(status_labels, status_updates_queue),
     )
+
+
+async def draw_error(message: str):
+
+    # hide main window
+    root = tk.Tk()
+    root.withdraw()
+
+    # message box display
+    messagebox.showerror("Error", message)

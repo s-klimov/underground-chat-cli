@@ -12,6 +12,8 @@ from pathlib import Path
 import configargparse as configargparse
 from dotenv import load_dotenv
 
+from common.gui import draw_error
+
 USERS_FILE = "users.json"
 
 logging.config.fileConfig('logging.ini', disable_existing_loggers=False)
@@ -112,7 +114,7 @@ class Authorise(CommonAuth):
         auth = json.loads(response)
 
         if auth is None:  # Если результат аутентификации null, то прекращаем выполнение скрипта
-            raise ValueError('Неизвестный токен. Проверьте его или зарегистрируйте заново.')
+            raise InvalidToken(self.__account_hash)
 
         logger.debug(f'Выполнена авторизация по токену {self.__account_hash}. Пользователь {auth["nickname"]}')
 
@@ -170,3 +172,17 @@ def cancelled_handler(e) -> None:
 
     logger.info("Прерываем работу сервера")  # логируем полученное сообщение
     raise
+
+
+class InvalidToken(Exception):
+    """Исключение ошибки авторизации по токену"""
+
+    def __init__(self, account_hash: uuid.UUID):
+        # Call the base class constructor with the parameters it needs
+        message = f'Проверьте токен {account_hash}, сервер его не узнал'
+        super().__init__(message)
+
+        # отрисовываем окно с тексом ошибки
+        asyncio.gather(
+            draw_error(message)
+        )

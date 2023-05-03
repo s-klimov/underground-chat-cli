@@ -1,7 +1,6 @@
 import asyncio
 import re
 import uuid
-from typing import Optional
 
 import backoff as backoff
 
