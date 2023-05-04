@@ -12,6 +12,7 @@ from pathlib import Path
 import configargparse as configargparse
 from dotenv import load_dotenv
 
+from common import gui
 from common.gui import draw_error
 
 USERS_FILE = "users.json"
@@ -77,13 +78,18 @@ class GUIArgs(CommonArgs):
 class CommonAuth:
     """Базовый класс для аутентификации на сервере minechat"""
 
-    def __init__(self, minechat_host: str, minechat_port: 'int >0', **kwargs):
+    def __init__(self, minechat_host: str, minechat_port: 'int >0', queue: asyncio.Queue = None, **kwargs):
         self.__minechat_host = minechat_host
         self.__minechat_port = minechat_port
+        self._queue = queue
+
         super().__init__(**kwargs)
 
     async def __aenter__(self):
         """Метод асинхронного контекстного менеджера"""
+
+        if self._queue is not None:
+            self._queue.put_nowait(gui.ReadConnectionStateChanged.INITIATED)
 
         reader, self.__writer = await asyncio.open_connection(self.__minechat_host, self.__minechat_port)
         return reader, self.__writer
@@ -91,6 +97,10 @@ class CommonAuth:
     async def __aexit__(self, *exc):
         logger.info('Закрываем соедиение с чатом')
         self.__writer.close()
+
+        if self._queue is not None:
+            self._queue.put_nowait(gui.ReadConnectionStateChanged.CLOSED)
+
         await self.__writer.wait_closed()
 
 
@@ -117,6 +127,9 @@ class Authorise(CommonAuth):
             raise InvalidToken(self.__account_hash)
 
         logger.debug(f'Выполнена авторизация по токену {self.__account_hash}. Пользователь {auth["nickname"]}')
+
+        if self._queue is not None:
+            self._queue.put_nowait(gui.ReadConnectionStateChanged.ESTABLISHED)
 
         return reader, writer
 
@@ -163,6 +176,9 @@ class Register(CommonAuth):
         users[user['nickname']] = user['account_hash']
         async with async_open(USERS_FILE, 'w') as f:
             await f.write(json.dumps(users))
+
+        if self._queue is not None:
+            self._queue.put_nowait(gui.ReadConnectionStateChanged.ESTABLISHED)
 
         return reader, writer
 

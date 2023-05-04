@@ -29,7 +29,7 @@ async def main(loop, options):
     # https://docs.python.org/3/library/asyncio-task.html#coroutines
     task1 = loop.create_task(gui.draw(messages_queue, sending_queue, status_updates_queue))
 
-    async with Authorise(account=options.account, minechat_host=options.host, minechat_port=5050) as (_, writer):
+    async with Authorise(account=options.account, minechat_host=options.host, minechat_port=5050, queue=status_updates_queue) as (_, writer):
 
         # https://docs.python.org/3/library/asyncio-task.html#running-tasks-concurrently
         await asyncio.gather(
