@@ -20,6 +20,7 @@ async def listen_messages(
         minechat_host: str,
         minechat_port: 'int > 0',
         minechat_history_file: str,
+        watchdog_queue: Optional[asyncio.Queue] = None,
         queue: Optional[asyncio.Queue] = None,
 ) -> None:
     """Считывает сообщения из сайта в консоль"""
@@ -34,6 +35,9 @@ async def listen_messages(
 
         if queue is not None:
             queue.put_nowait(data.decode().rstrip())
+
+        if watchdog_queue is not None:
+            watchdog_queue.put_nowait('Connection is alive. New message in chat')
 
 
 async def save_messages(filepath: str, message: str):

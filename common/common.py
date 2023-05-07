@@ -19,6 +19,7 @@ USERS_FILE = "users.json"
 
 logging.config.fileConfig('logging.ini', disable_existing_loggers=False)
 logger = logging.getLogger(__name__)
+watchdog_logger = logging.getLogger(__name__)
 
 
 class CommonArgs:
@@ -78,9 +79,10 @@ class GUIArgs(CommonArgs):
 class CommonAuth:
     """Базовый класс для аутентификации на сервере minechat"""
 
-    def __init__(self, minechat_host: str, minechat_port: 'int >0', status_queue: asyncio.Queue = None, **kwargs):
+    def __init__(self, minechat_host: str, minechat_port: 'int >0', watchdog_queue: asyncio.Queue = None, status_queue: asyncio.Queue = None, **kwargs):
         self.__minechat_host = minechat_host
         self.__minechat_port = minechat_port
+        self._watchdog_queue = watchdog_queue
         self._queue = status_queue
 
         super().__init__(**kwargs)
@@ -132,6 +134,9 @@ class Authorise(CommonAuth):
         if self._queue is not None:
             self._queue.put_nowait(gui.ReadConnectionStateChanged.ESTABLISHED)
             self._queue.put_nowait(gui.NicknameReceived(auth["nickname"]))
+
+        if self._watchdog_queue is not None:
+            self._watchdog_queue.put_nowait('Connection is alive. Prompt before auth')
 
         return reader, writer
 
@@ -204,3 +209,25 @@ class InvalidToken(Exception):
         asyncio.gather(
             draw_error(message)
         )
+
+
+async def send_messages(queue, writer, watchdog_queue, status_queue):
+
+    status_queue.put_nowait(gui.SendingConnectionStateChanged.ESTABLISHED)
+
+    while message := await queue.get():
+        message_line = ''.join([re.sub(r'\\n', ' ', message), '\n']).encode()
+        line_feed = '\n'.encode()
+
+        writer.writelines([message_line, line_feed])
+        await writer.drain()
+        watchdog_queue.put_nowait('Connection is alive. Message sent')
+
+    status_queue.put_nowait(gui.SendingConnectionStateChanged.CLOSED)
+
+
+async def watch_for_connection(watchdog_queue: asyncio.Queue):
+
+    while message := await watchdog_queue.get():
+
+        watchdog_logger.debug(message)

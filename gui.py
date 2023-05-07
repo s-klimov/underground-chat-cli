@@ -1,12 +1,11 @@
 import asyncio
 import logging
-import re
 from pathlib import Path
 
 from aiofile import async_open
 
 from common import gui, GUIArgs, Authorise
-from common.common import InvalidToken
+from common.common import InvalidToken, send_messages, watch_for_connection
 from listen_minechat import listen_messages
 
 
@@ -25,34 +24,22 @@ async def main(loop, options):
     messages_queue = asyncio.Queue()
     sending_queue = asyncio.Queue()
     status_updates_queue = asyncio.Queue()
+    watchdog_queue = asyncio.Queue()
 
     # https://docs.python.org/3/library/asyncio-task.html#coroutines
     task1 = loop.create_task(gui.draw(messages_queue, sending_queue, status_updates_queue))
 
-    async with Authorise(account=options.account, minechat_host=options.host, minechat_port=5050, status_queue=status_updates_queue) as (_, writer):
+    async with Authorise(account=options.account, minechat_host=options.host, minechat_port=5050, watchdog_queue=watchdog_queue, status_queue=status_updates_queue) as (_, writer):
 
         # https://docs.python.org/3/library/asyncio-task.html#running-tasks-concurrently
         await asyncio.gather(
             load_history(options.history, messages_queue),
-            listen_messages(options.host, options.port, options.history, messages_queue),
-            send_messages(sending_queue, writer, status_updates_queue),
+            listen_messages(options.host, options.port, options.history, watchdog_queue, messages_queue),
+            send_messages(sending_queue, writer, watchdog_queue, status_updates_queue),
+            watch_for_connection(watchdog_queue),
         )
 
         await task1
-
-
-async def send_messages(queue, writer, status_queue):
-
-    status_queue.put_nowait(gui.SendingConnectionStateChanged.ESTABLISHED)
-
-    while message := await queue.get():
-        message_line = ''.join([re.sub(r'\\n', ' ', message), '\n']).encode()
-        line_feed = '\n'.encode()
-
-        writer.writelines([message_line, line_feed])
-        await writer.drain()
-
-    status_queue.put_nowait(gui.SendingConnectionStateChanged.CLOSED)
 
 
 if __name__ == '__main__':
