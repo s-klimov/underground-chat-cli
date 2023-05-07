@@ -29,19 +29,21 @@ async def main(loop, options):
     # https://docs.python.org/3/library/asyncio-task.html#coroutines
     task1 = loop.create_task(gui.draw(messages_queue, sending_queue, status_updates_queue))
 
-    async with Authorise(account=options.account, minechat_host=options.host, minechat_port=5050, queue=status_updates_queue) as (_, writer):
+    async with Authorise(account=options.account, minechat_host=options.host, minechat_port=5050, status_queue=status_updates_queue) as (_, writer):
 
         # https://docs.python.org/3/library/asyncio-task.html#running-tasks-concurrently
         await asyncio.gather(
             load_history(options.history, messages_queue),
             listen_messages(options.host, options.port, options.history, messages_queue),
-            send_messages(sending_queue, writer),
+            send_messages(sending_queue, writer, status_updates_queue),
         )
 
         await task1
 
 
-async def send_messages(queue, writer):
+async def send_messages(queue, writer, status_queue):
+
+    status_queue.put_nowait(gui.SendingConnectionStateChanged.ESTABLISHED)
 
     while message := await queue.get():
         message_line = ''.join([re.sub(r'\\n', ' ', message), '\n']).encode()
@@ -49,6 +51,8 @@ async def send_messages(queue, writer):
 
         writer.writelines([message_line, line_feed])
         await writer.drain()
+
+    status_queue.put_nowait(gui.SendingConnectionStateChanged.CLOSED)
 
 
 if __name__ == '__main__':

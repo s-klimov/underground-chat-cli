@@ -78,10 +78,10 @@ class GUIArgs(CommonArgs):
 class CommonAuth:
     """Базовый класс для аутентификации на сервере minechat"""
 
-    def __init__(self, minechat_host: str, minechat_port: 'int >0', queue: asyncio.Queue = None, **kwargs):
+    def __init__(self, minechat_host: str, minechat_port: 'int >0', status_queue: asyncio.Queue = None, **kwargs):
         self.__minechat_host = minechat_host
         self.__minechat_port = minechat_port
-        self._queue = queue
+        self._queue = status_queue
 
         super().__init__(**kwargs)
 
@@ -90,6 +90,7 @@ class CommonAuth:
 
         if self._queue is not None:
             self._queue.put_nowait(gui.ReadConnectionStateChanged.INITIATED)
+            self._queue.put_nowait(gui.SendingConnectionStateChanged.INITIATED)
 
         reader, self.__writer = await asyncio.open_connection(self.__minechat_host, self.__minechat_port)
         return reader, self.__writer
@@ -130,6 +131,7 @@ class Authorise(CommonAuth):
 
         if self._queue is not None:
             self._queue.put_nowait(gui.ReadConnectionStateChanged.ESTABLISHED)
+            self._queue.put_nowait(gui.NicknameReceived(auth["nickname"]))
 
         return reader, writer
 
