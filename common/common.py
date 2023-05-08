@@ -2,6 +2,7 @@ import json
 import logging.config
 import os
 import re
+import time
 import uuid
 
 import asyncio
@@ -10,6 +11,8 @@ from json import JSONDecodeError
 from pathlib import Path
 
 import configargparse as configargparse
+from aiologger import Logger
+from async_timeout import timeout
 from dotenv import load_dotenv
 
 from common import gui
@@ -18,8 +21,9 @@ from common.gui import draw_error
 USERS_FILE = "users.json"
 
 logging.config.fileConfig('logging.ini', disable_existing_loggers=False)
-logger = logging.getLogger(__name__)
-watchdog_logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)  # TODO Logger.with_default_handlers()
+
+watchdog_logger = logging.getLogger(__name__)  # TODO Logger.with_default_handlers()
 
 
 class CommonArgs:
@@ -228,6 +232,9 @@ async def send_messages(queue, writer, watchdog_queue, status_queue):
 
 async def watch_for_connection(watchdog_queue: asyncio.Queue):
 
-    while message := await watchdog_queue.get():
-
-        watchdog_logger.debug(message)
+    timer = 20  # TODO рассчитать время для первичной загрузки истории переписки
+    while True:
+        async with timeout(timer) as cm:  # FIXME
+            message = await watchdog_queue.get()
+            watchdog_logger.debug(message)
+            timer = 1
