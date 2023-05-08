@@ -2,7 +2,6 @@ import json
 import logging.config
 import os
 import re
-import time
 import uuid
 
 import asyncio
@@ -23,7 +22,7 @@ USERS_FILE = "users.json"
 logging.config.fileConfig('logging.ini', disable_existing_loggers=False)
 logger = logging.getLogger(__name__)  # TODO Logger.with_default_handlers()
 
-watchdog_logger = logging.getLogger(__name__)  # TODO Logger.with_default_handlers()
+watchdog_logger = logging.getLogger('watchdog')  # TODO Logger.with_default_handlers()
 
 
 class CommonArgs:
@@ -230,11 +229,9 @@ async def send_messages(queue, writer, watchdog_queue, status_queue):
     status_queue.put_nowait(gui.SendingConnectionStateChanged.CLOSED)
 
 
-async def watch_for_connection(watchdog_queue: asyncio.Queue):
+async def watch_for_connection(watchdog_queue: asyncio.Queue, loop):
 
-    timer = 20  # TODO рассчитать время для первичной загрузки истории переписки
     while True:
-        async with timeout(timer) as cm:  # FIXME
+        async with timeout(5) as cm:  # NOTE 5 секунд установлено эксперементально
             message = await watchdog_queue.get()
             watchdog_logger.debug(message)
-            timer = 1
