@@ -20,9 +20,9 @@ from common.gui import draw_error
 USERS_FILE = "users.json"
 
 logging.config.fileConfig('logging.ini', disable_existing_loggers=False)
-logger = logging.getLogger(__name__)  # TODO Logger.with_default_handlers()
+logger = Logger.with_default_handlers()
 
-watchdog_logger = logging.getLogger('watchdog')  # TODO Logger.with_default_handlers()
+watchdog_logger = Logger.with_default_handlers()
 
 
 class CommonArgs:

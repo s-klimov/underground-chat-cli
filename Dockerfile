@@ -12,6 +12,7 @@ ENV PYTHONUSERBASE="/app/.local" \
 
 # Устанавливаем необходимые библиотеки для сборки python пакетов и поддержки клиента БД Oracle.
 RUN apt-get update -y && \
+    apt-get install --yes libx11-6 libxext-dev libxrender-dev libxinerama-dev libxi-dev libxrandr-dev libxcursor-dev libxtst-dev tk-dev && \
     apt-get install --yes --no-install-recommends python3-dev libpq-dev libaio1 zip unzip && \
     rm -rf /var/lib/apt/lists/*
 

@@ -35,12 +35,21 @@ poetry shell
 * PORT -- порт сервера с чатом
 * HISTORY -- путь к файлу для хранения истории чата
 * ACCOUNT -- хэш аккаунта для написания сообщений в чат
+* DISPLAY -- адрес виртуального дисплея для X-сервера (используется при запуске скрипта gui.py из контейнера)
 
 Пример:  
 * HOST=minechat.dvmn.org
 * PORT=5000
 * HISTORY=chat.txt
 * ACCOUNT=f007e00c-cd77-11ed-ad76-0242ac110002
+* DISPLAY=172.26.32.1:0.0
+
+5. Настройте запуск скрипта gui.py (если запускаете из контейнера)
+[Видеоинструкция](https://youtu.be/W82jvmiaDtk?list=PLQMlgM71Ag24wooZwLXguA_Cx7rRXaVwa)
+Пример запуска экранного сервера из ОС Windows:
+```commandline
+PS C:\Program Files (x86)\Xming> .\xming -ac
+```
 
 ## Запуск проекта
 
