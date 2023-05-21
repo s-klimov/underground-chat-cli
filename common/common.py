@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 from common import gui
 from common.gui import draw_error
 
+TIMEOUT_MAX = 5  # NOTE 5 секунд установлено эксперементально
 USERS_FILE = "users.json"
 
 logging.config.fileConfig('logging.ini', disable_existing_loggers=False)
@@ -82,7 +83,8 @@ class GUIArgs(CommonArgs):
 class CommonAuth:
     """Базовый класс для аутентификации на сервере minechat"""
 
-    def __init__(self, minechat_host: str, minechat_port: 'int >0', watchdog_queue: asyncio.Queue = None, status_queue: asyncio.Queue = None, **kwargs):
+    def __init__(self, minechat_host: str, minechat_port: 'int >0', watchdog_queue: asyncio.Queue = None,
+                 status_queue: asyncio.Queue = None, **kwargs):
         self.__minechat_host = minechat_host
         self.__minechat_port = minechat_port
         self._watchdog_queue = watchdog_queue
@@ -229,9 +231,13 @@ async def send_messages(queue, writer, watchdog_queue, status_queue):
     status_queue.put_nowait(gui.SendingConnectionStateChanged.CLOSED)
 
 
-async def watch_for_connection(watchdog_queue: asyncio.Queue, loop):
+async def watch_for_connection(watchdog_queue: asyncio.Queue):
 
     while True:
-        async with timeout(5) as cm:  # NOTE 5 секунд установлено эксперементально
-            message = await watchdog_queue.get()
+        try:
+            async with timeout(TIMEOUT_MAX):
+                message = await watchdog_queue.get()
+        except asyncio.exceptions.TimeoutError:
+            watchdog_logger.debug("%ss timeout is elapsed" % (TIMEOUT_MAX,))
+        else:
             watchdog_logger.debug(message)

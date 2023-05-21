@@ -34,16 +34,18 @@ async def main(loop, options):
         load_history(options.history, messages_queue),
     )
 
-    async with Authorise(account=options.account, minechat_host=options.host, minechat_port=5050, watchdog_queue=watchdog_queue, status_queue=status_updates_queue) as (_, writer):
+    while True:
+        async with Authorise(account=options.account, minechat_host=options.host, minechat_port=5050,
+                             watchdog_queue=watchdog_queue, status_queue=status_updates_queue) as (_, writer):
 
-        # https://docs.python.org/3/library/asyncio-task.html#running-tasks-concurrently
-        await asyncio.gather(
-            listen_messages(options.host, options.port, options.history, watchdog_queue, messages_queue),
-            send_messages(sending_queue, writer, watchdog_queue, status_updates_queue),
-            watch_for_connection(watchdog_queue, loop),
-        )
+            # https://docs.python.org/3/library/asyncio-task.html#running-tasks-concurrently
+            await asyncio.gather(
+                listen_messages(options.host, options.port, options.history, watchdog_queue, messages_queue),
+                send_messages(sending_queue, writer, watchdog_queue, status_updates_queue),
+                watch_for_connection(watchdog_queue),
+            )
 
-        await task1
+            await task1
 
 
 if __name__ == '__main__':
