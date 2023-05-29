@@ -10,28 +10,36 @@ from common import cancelled_handler, logger, ListenArgs
 logger.name = "LISTENER"
 
 
+def authorize(
+        minechat_host: str,
+        minechat_port: 'int > 0',
+):
+    def wrap(func):
+        async def wrapped(*args, **kwargs):
+            reader, _ = await asyncio.open_connection(minechat_host, minechat_port)
+            await func(*args, **kwargs, reader=reader)
+        return wrapped
+    return wrap
+
+
 @backoff.on_exception(backoff.expo,
                       asyncio.exceptions.CancelledError,
                       raise_on_giveup=False,
                       giveup=cancelled_handler)
-@backoff.on_exception(backoff.expo,
-                      (OSError, asyncio.exceptions.TimeoutError))
+@authorize("minechat.dvmn.org", 5000)  # TODO сделать значения константами проекта
 async def listen_messages(
-        minechat_host: str,
-        minechat_port: 'int > 0',
         minechat_history_file: str,
         watchdog_queue: Optional[asyncio.Queue] = None,
         queue: Optional[asyncio.Queue] = None,
+        reader: Optional[asyncio.StreamReader] = None,
 ) -> None:
     """Считывает сообщения из сайта в консоль"""
-
-    reader, _ = await asyncio.open_connection(minechat_host, minechat_port)
 
     while data := await reader.readline():
 
         logger.debug(data.decode().rstrip())  # логируем полученное сообщение
 
-        await save_messages(filepath=minechat_history_file, message=data.decode())
+        await save_messages(filepath=minechat_history_file, message=data.decode())  # TODO сделать minechat_history_file константой проекта
 
         if queue is not None:
             queue.put_nowait(data.decode().rstrip())

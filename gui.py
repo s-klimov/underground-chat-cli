@@ -40,7 +40,7 @@ async def main(loop, options):
 
             # https://docs.python.org/3/library/asyncio-task.html#running-tasks-concurrently
             await asyncio.gather(
-                listen_messages(options.host, options.port, options.history, watchdog_queue, messages_queue),
+                listen_messages(options.history, watchdog_queue, messages_queue),
                 send_messages(sending_queue, writer, watchdog_queue, status_updates_queue),
                 watch_for_connection(watchdog_queue),
             )
