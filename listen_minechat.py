@@ -5,7 +5,7 @@ from aiofile import async_open
 
 import backoff as backoff
 
-from common import cancelled_handler, logger, ListenArgs
+from common import cancelled_handler, logger, options, drawing
 
 logger.name = "LISTENER"
 
@@ -15,9 +15,12 @@ def authorize(
         minechat_port: 'int > 0',
 ):
     def wrap(func):
-        async def wrapped(*args, **kwargs):
+        async def wrapped(*args):
+            _, watchdog_queue, status_queue = args
+            status_queue.put_nowait(drawing.ReadConnectionStateChanged.INITIATED)
             reader, _ = await asyncio.open_connection(minechat_host, minechat_port)
-            await func(*args, **kwargs, reader=reader)
+
+            await func(*args, reader=reader)
         return wrapped
     return wrap
 
@@ -26,20 +29,23 @@ def authorize(
                       asyncio.exceptions.CancelledError,
                       raise_on_giveup=False,
                       giveup=cancelled_handler)
-@authorize("minechat.dvmn.org", 5000)  # TODO сделать значения константами проекта
+@authorize(options.host, options.listen_port)
 async def listen_messages(
-        minechat_history_file: str,
-        watchdog_queue: Optional[asyncio.Queue] = None,
-        queue: Optional[asyncio.Queue] = None,
-        reader: Optional[asyncio.StreamReader] = None,
+        queue: Optional[asyncio.Queue],
+        watchdog_queue: Optional[asyncio.Queue],
+        status_queue: Optional[asyncio.Queue],
+        /,
+        reader: Optional[asyncio.StreamReader],
 ) -> None:
     """Считывает сообщения из сайта в консоль"""
+
+    status_queue.put_nowait(drawing.ReadConnectionStateChanged.ESTABLISHED)
 
     while data := await reader.readline():
 
         logger.debug(data.decode().rstrip())  # логируем полученное сообщение
 
-        await save_messages(filepath=minechat_history_file, message=data.decode())  # TODO сделать minechat_history_file константой проекта
+        await save_messages(filepath=options.history, message=data.decode())
 
         if queue is not None:
             queue.put_nowait(data.decode().rstrip())
@@ -53,16 +59,3 @@ async def save_messages(filepath: str, message: str):
 
     async with async_open(filepath, 'a') as afp:
         await afp.write(message)
-
-
-if __name__ == '__main__':
-
-    args = ListenArgs()
-    options = args.get_args()
-
-    try:
-        asyncio.run(listen_messages(options.host, options.port, options.history))
-    except KeyboardInterrupt:
-        pass
-    finally:
-        logger.info('Работа сервера остановлена')
