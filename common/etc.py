@@ -71,8 +71,8 @@ async def watch_for_connection(watchdog_queue: asyncio.Queue, status_queue: asyn
                 message = await watchdog_queue.get()
         except asyncio.exceptions.TimeoutError:
             watchdog_logger.debug("%ss timeout is elapsed" % (TIMEOUT_MAX,))
-            status_queue.put_nowait(drawing.ReadConnectionStateChanged.CLOSED)
-            status_queue.put_nowait(drawing.SendingConnectionStateChanged.CLOSED)
+            status_queue.put_nowait(drawing.ReadConnectionStateChanged.INITIATED)
+            status_queue.put_nowait(drawing.SendingConnectionStateChanged.INITIATED)
         else:
             status_queue.put_nowait(drawing.ReadConnectionStateChanged.ESTABLISHED)
             status_queue.put_nowait(drawing.SendingConnectionStateChanged.ESTABLISHED)

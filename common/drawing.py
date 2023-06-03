@@ -34,6 +34,8 @@ class NicknameReceived:
 
 def process_new_message(input_field, sending_queue):
     text = input_field.get()
+    if not text:
+        return
     sending_queue.put_nowait(text)
     input_field.delete(0, tk.END)
 

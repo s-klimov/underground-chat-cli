@@ -4,8 +4,10 @@ import re
 import asyncio
 from uuid import UUID
 
+import backoff
+
 from common import options, drawing
-from common.etc import InvalidToken, logger
+from common.etc import InvalidToken, logger, cancelled_handler
 
 
 def authorize(minechat_host: str, minechat_port: 'int > 0', account: UUID):
@@ -42,6 +44,10 @@ def authorize(minechat_host: str, minechat_port: 'int > 0', account: UUID):
     return wrap
 
 
+@backoff.on_exception(backoff.expo,
+                      asyncio.exceptions.CancelledError,
+                      raise_on_giveup=False,
+                      giveup=cancelled_handler)
 @authorize(options.host, options.sending_port, options.account)
 async def send_messages(queue, watchdog_queue, _, /, writer):
 
