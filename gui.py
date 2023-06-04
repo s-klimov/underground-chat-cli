@@ -8,7 +8,7 @@ from anyio import create_task_group
 from common import drawing, options
 from common.etc import InvalidToken, watch_for_connection
 from common.sending import send_messages
-from listen_minechat import listen_messages
+from common.listen_minechat import listen_messages
 
 
 async def load_history(messages_queue: asyncio.Queue):
